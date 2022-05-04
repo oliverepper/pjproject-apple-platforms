@@ -1,0 +1,5 @@
+clean.sh
+pjproject
+build
+install.sh
+.DS_Store
