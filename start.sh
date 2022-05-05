@@ -15,21 +15,25 @@ function install {
 	mkdir -p $PREFIX/lib/pkgconfig
 	cp -a build/libpjproject.xcframework $PREFIX/
 	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE
-pjsip=$PREFIX/libpjproject.xcframework/Headers/pjsip
-pjlib=$PREFIX/libpjproject.xcframework/Headers/pjlib
-pjlibutil=$PREFIX/libpjproject.xcframework/Headers/pjlib-util
-pjmedia=$PREFIX/libpjproject.xcframework/Headers/pjmedia
-pjnath=$PREFIX/libpjproject.xcframework/Headers/pjnath
-
-libdir=$PREFIX/libpjproject.xcframework/macos-arm64_x86_64
+prefix=$PREFIX
 
 END
 
 	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE
+pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
+pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
+pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
+pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
+pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
+
+ios=${prefix}/libpjproject.xcframework/ios-arm64
+sim=${prefix}/libpjproject.xcframework/ios-arm64-simulator
+mac=${prefix}/libpjproject.xcframework/macos-arm64_x86_64
+
 Name: Cpjproject
 Version: 2.12
 Description: Multimedia communication library
-Libs: -L${libdir} -lpjproject
+Libs: -L${mac} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
 END
 	exit 0
