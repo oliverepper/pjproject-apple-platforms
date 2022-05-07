@@ -33,7 +33,7 @@ mac=${prefix}/libpjproject.xcframework/macos-arm64_x86_64
 Name: Cpjproject
 Version: 2.12
 Description: Multimedia communication library
-Libs: -L${mac} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -lpjproject
+Libs: -L${mac} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
 END
 	exit 0
