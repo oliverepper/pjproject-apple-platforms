@@ -12,8 +12,17 @@ function clean {
 function install {
 	local PREFIX=$1
 	local PC_FILE=pjproject-apple-platforms.pc
-	mkdir -p $PREFIX/lib/pkgconfig
+	local PC_FILE_IOS=pjproject-apple-platforms-ios.pc
+	local PC_FILE_SIM=pjproject-apple-platforms-sim.pc
+
+	# copy xcframework
+	mkdir -p $PREFIX
 	cp -a build/libpjproject.xcframework $PREFIX/
+	
+	# create pkg-config files
+	mkdir -p $PREFIX/lib/pkgconfig
+
+	# for macOS (x86_64 and arm64)
 	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE
 prefix=$PREFIX
 
@@ -26,8 +35,6 @@ pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
 pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
 pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 
-ios=${prefix}/libpjproject.xcframework/ios-arm64
-sim=${prefix}/libpjproject.xcframework/ios-arm64-simulator
 mac=${prefix}/libpjproject.xcframework/macos-arm64_x86_64
 
 Name: Cpjproject
@@ -36,6 +43,51 @@ Description: Multimedia communication library
 Libs: -L${mac} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
 END
+
+	# for iOS
+	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_IOS
+prefix=$PREFIX
+
+END
+
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IOS
+pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
+pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
+pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
+pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
+pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
+
+ios=${prefix}/libpjproject.xcframework/ios-arm64
+
+Name: Cpjproject
+Version: 2.12
+Description: Multimedia communication library
+Libs: -L${ios} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
+Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
+END
+
+	# for iOS Simulator
+	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_SIM
+prefix=$PREFIX
+
+END
+
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SIM
+pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
+pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
+pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
+pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
+pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
+
+sim=${prefix}/libpjproject.xcframework/ios-arm64-simulator
+
+Name: Cpjproject
+Version: 2.12
+Description: Multimedia communication library
+Libs: -L${sim} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
+Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
+END
+
 	exit 0
 }
 
