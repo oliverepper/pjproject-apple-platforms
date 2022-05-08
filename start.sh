@@ -17,13 +17,12 @@ function install {
 	local PC_FILE_IPHONESIMULATOR=pjproject-apple-platforms-iPhoneSimulator.pc
 	local PC_FILE_SPM=pjproject-apple-platforms-SPM.pc
 
+	mkdir -p $PREFIX/lib/pkgconfig
+	
 	# copy xcframework
-	mkdir -p $PREFIX
-	cp -a build/libpjproject.xcframework $PREFIX/
+	cp -a build/libpjproject.xcframework $PREFIX/lib
 	
 	# create pkg-config files
-	mkdir -p $PREFIX/lib/pkgconfig
-
 	# for macOS (x86_64 and arm64)
 	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
 prefix=$PREFIX
