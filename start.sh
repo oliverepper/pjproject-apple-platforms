@@ -20,7 +20,17 @@ function install {
 	mkdir -p $PREFIX/lib/pkgconfig
 	
 	# copy xcframework
-	cp -a build/libpjproject.xcframework $PREFIX/lib
+	cp -a build/libpjproject.xcframework $PREFIX
+
+	# link in lib
+	pushd $PREFIX/lib
+	ln -sf ../libpjproject.xcframework .
+	popd
+
+	# link in include
+	pushd $PREFIX
+	ln -sf libpjproject.xcframework/Headers include
+	popd
 	
 	# create pkg-config files
 	# for macOS (x86_64 and arm64)
