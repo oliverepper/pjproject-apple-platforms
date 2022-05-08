@@ -12,8 +12,9 @@ function clean {
 function install {
 	local PREFIX=$1
 	local PC_FILE=pjproject-apple-platforms.pc
-	local PC_FILE_IOS=pjproject-apple-platforms-ios.pc
-	local PC_FILE_SIM=pjproject-apple-platforms-sim.pc
+	local PC_FILE_MACOSX=pjproject-apple-platforms-MacOSX.pc
+	local PC_FILE_IPHONEOS=pjproject-apple-platforms-iPhoneOS.pc
+	local PC_FILE_IPHONESIMULATOR=pjproject-apple-platforms-iPhoneSimulator.pc
 
 	# copy xcframework
 	mkdir -p $PREFIX
@@ -23,70 +24,73 @@ function install {
 	mkdir -p $PREFIX/lib/pkgconfig
 
 	# for macOS (x86_64 and arm64)
-	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE
+	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
 prefix=$PREFIX
 
 END
 
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
 pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
 pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
 pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
 pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
 pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 
-mac=${prefix}/libpjproject.xcframework/macos-arm64_x86_64
+libdir=${prefix}/libpjproject.xcframework/macos-arm64_x86_64
 
 Name: Cpjproject
 Version: 2.12
 Description: Multimedia communication library
-Libs: -L${mac} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
+Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
 END
 
 	# for iOS
-	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_IOS
+	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
 prefix=$PREFIX
 
 END
 
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IOS
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
 pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
 pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
 pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
 pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
 pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 
-ios=${prefix}/libpjproject.xcframework/ios-arm64
+libdir=${prefix}/libpjproject.xcframework/ios-arm64
 
 Name: Cpjproject
 Version: 2.12
 Description: Multimedia communication library
-Libs: -L${ios} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
+Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
 END
 
 	# for iOS Simulator
-	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_SIM
+	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
 prefix=$PREFIX
 
 END
 
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SIM
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
 pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
 pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
 pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
 pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
 pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 
-sim=${prefix}/libpjproject.xcframework/ios-arm64-simulator
+libdir=${prefix}/libpjproject.xcframework/ios-arm64-simulator
 
 Name: Cpjproject
 Version: 2.12
 Description: Multimedia communication library
-Libs: -L${sim} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
+Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
 END
+
+	# link pjproject-apple-platforms.pc
+	ln -sf $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX $PREFIX/lib/pkgconfig/$PC_FILE
 
 	exit 0
 }
