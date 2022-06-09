@@ -1,6 +1,8 @@
 #!/bin/sh
 # Oliver Epper <oliver.epper@gmail.com>
 
+export PJSIP_VERSION=2.12.1
+
 function clean {
 	echo "Cleaning"
 	rm -rf pjproject
@@ -49,7 +51,7 @@ pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 libdir=${prefix}/libpjproject.xcframework/macos-arm64_x86_64
 
 Name: Cpjproject
-Version: 2.12
+Version: ${PJSIP_VERSION}
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -71,7 +73,7 @@ pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 libdir=${prefix}/libpjproject.xcframework/ios-arm64
 
 Name: Cpjproject
-Version: 2.12
+Version: ${PJSIP_VERSION}
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -93,7 +95,7 @@ pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 libdir=${prefix}/libpjproject.xcframework/ios-arm64-simulator
 
 Name: Cpjproject
-Version: 2.12
+Version: ${PJSIP_VERSION}
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -113,7 +115,7 @@ pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
 pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 
 Name: Cpjproject
-Version: 2.12
+Version: ${PJSIP_VERSION}
 Description: Multimedia communication library
 Libs: -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -146,7 +148,7 @@ then
 	ln -sf start.sh install.sh
 fi
 
-git clone --depth 1 --branch 2.12 https://github.com/pjsip/pjproject # > /dev/null 2>&1
+git clone --depth 1 --branch $PJSIP_VERSION https://github.com/pjsip/pjproject # > /dev/null 2>&1
 cat << 'END' > pjproject/build_apple_platforms.sh
 #!/bin/sh
 
