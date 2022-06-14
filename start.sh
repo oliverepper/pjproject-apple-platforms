@@ -201,6 +201,21 @@ mkdir -p $OUT_SIM_ARM64
 # ar -csr $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -name "*.o"`
 libtool -static -o $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a"`
 
+#
+# build for simulator x86_64 & create lib
+#
+find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
+IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch x86_64" MIN_IOS="-mios-simulator-version-min=13" ./configure-iphone
+make dep && make clean
+CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable" make
+
+OUT_SIM_ARM64="$BUILD_DIR/sim_arm64"
+mkdir -p $OUT_SIM_X86_64
+# the Makefile is a little more selective about which .o files go into the lib
+# so let's use libtool instead of ar
+# ar -csr $OUT_SIM_X86_64/libpjproject.a `find . -not -path "./pjsip-apps/*" -name "*.o"`
+libtool -static -o $OUT_SIM_X86_64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a"`
+
 
 #
 # build for device arm64 & create lib
