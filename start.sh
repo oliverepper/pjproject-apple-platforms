@@ -209,7 +209,7 @@ IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable" make
 
-OUT_SIM_ARM64="$BUILD_DIR/sim_arm64"
+OUT_SIM_X86_64="$BUILD_DIR/sim_x86_64"
 mkdir -p $OUT_SIM_X86_64
 # the Makefile is a little more selective about which .o files go into the lib
 # so let's use libtool instead of ar
