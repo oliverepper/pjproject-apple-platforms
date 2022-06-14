@@ -92,7 +92,7 @@ pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
 pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
 pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 
-libdir=${prefix}/libpjproject.xcframework/ios-arm64-simulator
+libdir=${prefix}/libpjproject.xcframework/ios-arm64_x86_64-simulator
 
 Name: Cpjproject
 Version: ${PJSIP_VERSION}
@@ -268,6 +268,12 @@ OUT_MAC="$BUILD_DIR/mac"
 mkdir -p $OUT_MAC
 lipo -create $OUT_MAC_ARM64/libpjproject.a $OUT_MAC_X86_64/libpjproject.a -output $OUT_MAC/libpjproject.a
 
+#
+# create fat lib for the simulator
+#
+OUT_SIM="$BUILD_DIR/simulator"
+mkdir -p $OUT_SIM
+lipo -create $OUT_SIM_ARM64/libpjproject.a $OUT_SIM_X86_64/libpjproject.a -output $OUT_SIM/libpjproject.a
 
 #
 # collect headers & create xcframework
@@ -282,8 +288,8 @@ done
 XCFRAMEWORK="$BUILD_DIR/libpjproject.xcframework"
 rm -rf $XCFRAMEWORK
 xcodebuild -create-xcframework \
--library $OUT_SIM_ARM64/libpjproject.a \
 -library $OUT_DEV_ARM64/libpjproject.a \
+-library $OUT_SIM/libpjproject.a \
 -library $OUT_MAC/libpjproject.a \
 -output $XCFRAMEWORK
 
