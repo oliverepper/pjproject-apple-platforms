@@ -51,7 +51,11 @@ pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 libdir=${prefix}/libpjproject.xcframework/macos-arm64_x86_64
 
 Name: Cpjproject
-Version: ${PJSIP_VERSION}
+END
+
+	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -73,7 +77,11 @@ pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 libdir=${prefix}/libpjproject.xcframework/ios-arm64
 
 Name: Cpjproject
-Version: ${PJSIP_VERSION}
+END
+
+	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -95,7 +103,11 @@ pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 libdir=${prefix}/libpjproject.xcframework/ios-arm64_x86_64-simulator
 
 Name: Cpjproject
-Version: ${PJSIP_VERSION}
+END
+
+	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -115,7 +127,11 @@ pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
 pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 
 Name: Cpjproject
-Version: ${PJSIP_VERSION}
+END
+
+	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
 Description: Multimedia communication library
 Libs: -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
