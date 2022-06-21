@@ -1,6 +1,8 @@
 #!/bin/sh
 # Oliver Epper <oliver.epper@gmail.com>
 
+export PJSIP_VERSION=2.12.1
+
 function clean {
 	echo "Cleaning"
 	rm -rf pjproject
@@ -49,7 +51,7 @@ pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 libdir=${prefix}/libpjproject.xcframework/macos-arm64_x86_64
 
 Name: Cpjproject
-Version: 2.12
+Version: ${PJSIP_VERSION}
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -71,7 +73,7 @@ pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 libdir=${prefix}/libpjproject.xcframework/ios-arm64
 
 Name: Cpjproject
-Version: 2.12
+Version: ${PJSIP_VERSION}
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -90,10 +92,10 @@ pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
 pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
 pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 
-libdir=${prefix}/libpjproject.xcframework/ios-arm64-simulator
+libdir=${prefix}/libpjproject.xcframework/ios-arm64_x86_64-simulator
 
 Name: Cpjproject
-Version: 2.12
+Version: ${PJSIP_VERSION}
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -113,7 +115,7 @@ pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
 pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 
 Name: Cpjproject
-Version: 2.12
+Version: ${PJSIP_VERSION}
 Description: Multimedia communication library
 Libs: -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -146,7 +148,7 @@ then
 	ln -sf start.sh install.sh
 fi
 
-git clone --depth 1 --branch 2.12 https://github.com/pjsip/pjproject # > /dev/null 2>&1
+git clone --depth 1 --branch $PJSIP_VERSION https://github.com/pjsip/pjproject # > /dev/null 2>&1
 cat << 'END' > pjproject/build_apple_platforms.sh
 #!/bin/sh
 
@@ -198,6 +200,21 @@ mkdir -p $OUT_SIM_ARM64
 # so let's use libtool instead of ar
 # ar -csr $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -name "*.o"`
 libtool -static -o $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a"`
+
+#
+# build for simulator x86_64 & create lib
+#
+find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
+IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch x86_64" MIN_IOS="-mios-simulator-version-min=13" ./configure-iphone
+make dep && make clean
+CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable" make
+
+OUT_SIM_X86_64="$BUILD_DIR/sim_x86_64"
+mkdir -p $OUT_SIM_X86_64
+# the Makefile is a little more selective about which .o files go into the lib
+# so let's use libtool instead of ar
+# ar -csr $OUT_SIM_X86_64/libpjproject.a `find . -not -path "./pjsip-apps/*" -name "*.o"`
+libtool -static -o $OUT_SIM_X86_64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a"`
 
 
 #
@@ -251,6 +268,12 @@ OUT_MAC="$BUILD_DIR/mac"
 mkdir -p $OUT_MAC
 lipo -create $OUT_MAC_ARM64/libpjproject.a $OUT_MAC_X86_64/libpjproject.a -output $OUT_MAC/libpjproject.a
 
+#
+# create fat lib for the simulator
+#
+OUT_SIM="$BUILD_DIR/simulator"
+mkdir -p $OUT_SIM
+lipo -create $OUT_SIM_ARM64/libpjproject.a $OUT_SIM_X86_64/libpjproject.a -output $OUT_SIM/libpjproject.a
 
 #
 # collect headers & create xcframework
@@ -265,8 +288,8 @@ done
 XCFRAMEWORK="$BUILD_DIR/libpjproject.xcframework"
 rm -rf $XCFRAMEWORK
 xcodebuild -create-xcframework \
--library $OUT_SIM_ARM64/libpjproject.a \
 -library $OUT_DEV_ARM64/libpjproject.a \
+-library $OUT_SIM/libpjproject.a \
 -library $OUT_MAC/libpjproject.a \
 -output $XCFRAMEWORK
 
