@@ -79,9 +79,9 @@ libdir=${prefix}/libpjproject.xcframework/ios-arm64
 Name: Cpjproject
 END
 
-	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
 	
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -105,9 +105,9 @@ libdir=${prefix}/libpjproject.xcframework/ios-arm64_x86_64-simulator
 Name: Cpjproject
 END
 
-	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
 	
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
 Description: Multimedia communication library
 Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
@@ -129,9 +129,9 @@ pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
 Name: Cpjproject
 END
 
-	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
 	
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
 Description: Multimedia communication library
 Libs: -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
