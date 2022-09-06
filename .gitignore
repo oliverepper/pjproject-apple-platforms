@@ -3,3 +3,4 @@ pjproject
 build
 install.sh
 .DS_Store
+.install.sh

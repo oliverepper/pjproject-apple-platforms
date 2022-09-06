@@ -143,7 +143,6 @@ DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" 
 ARCH="-arch arm64" \
 MIN_IOS="-mios-simulator-version-min=13" \
 ./configure-iphone --with-opus=/Users/oliver/Developer/opus-apple-platforms/build/iOS_simulator_arm64
-exit 1
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable" make
 
