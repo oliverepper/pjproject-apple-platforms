@@ -7,8 +7,7 @@ function clean {
 	echo "Cleaning"
 	rm -rf pjproject
 	rm -rf build
-	rm clean.sh
-	rm install.sh	
+	rm clean.sh .install.sh	
 }
 
 function install {
@@ -62,80 +61,13 @@ Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
 END
 
 	# for iOS
-	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
-prefix=$PREFIX
-
-END
-
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
-pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
-pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
-pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
-pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
-pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
-
-libdir=${prefix}/libpjproject.xcframework/ios-arm64
-
-Name: Cpjproject
-END
-
-	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
-	
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
-Description: Multimedia communication library
-Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
-Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
-END
+	sed -e s/macos-arm64_x86_64/ios_arm64/ < $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX > $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
 
 	# for iOS Simulator
-	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
-prefix=$PREFIX
-
-END
-
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
-pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
-pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
-pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
-pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
-pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
-
-libdir=${prefix}/libpjproject.xcframework/ios-arm64_x86_64-simulator
-
-Name: Cpjproject
-END
-
-	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
-	
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
-Description: Multimedia communication library
-Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
-Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
-END
+	sed -e s/macos-arm64_x86_64/ios-arm64_x86_64-simulator/ < $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX > $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
 
 	# for SPM
-	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_SPM
-prefix=$PREFIX
-
-END
-
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
-pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
-pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
-pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
-pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
-pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
-
-Name: Cpjproject
-END
-
-	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
-	
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
-Description: Multimedia communication library
-Libs: -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
-Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
-END
+	sed -e /^libdir=/,+2d -e 's/^Libs: -L${libdir} -f/Libs: -f/' < $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX > $PREFIX/lib/pkgconfig/$PC_FILE_SPM
 
 	# link pjproject-apple-platforms.pc
 	ln -sf $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX $PREFIX/lib/pkgconfig/$PC_FILE
@@ -148,7 +80,7 @@ if [[ $me = "clean.sh" ]]
 then
 	clean
 	exit 0
-elif [[ $me == "install.sh" ]]
+elif [[ $me == ".install.sh" ]]
 then
 	install $1
 	exit 0
@@ -159,12 +91,13 @@ then
 	ln -sf start.sh clean.sh
 fi
 
-if [[ ! -f install.sh ]]
+if [[ ! -f .install.sh ]]
 then
-	ln -sf start.sh install.sh
+	ln -sf start.sh .install.sh
 fi
 
-git clone --depth 1 --branch $PJSIP_VERSION https://github.com/pjsip/pjproject # > /dev/null 2>&1
+git -c advice.detachedHead=false clone --depth 1 --branch $PJSIP_VERSION https://github.com/pjsip/pjproject # > /dev/null 2>&1
+
 cat << 'END' > pjproject/build_apple_platforms.sh
 #!/bin/sh
 
@@ -201,12 +134,16 @@ COMMAND_LINE_TOOLS_PATH="$(xcode-select -p)"
 #
 BUILD_DIR=../build
 
-
 #
 # build for simulator arm64 & create lib
 #
 find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
-IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch arm64" MIN_IOS="-mios-simulator-version-min=13" ./configure-iphone
+IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" \
+DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" \
+ARCH="-arch arm64" \
+MIN_IOS="-mios-simulator-version-min=13" \
+./configure-iphone --with-opus=/Users/oliver/Developer/opus-apple-platforms/build/iOS_simulator_arm64
+exit 1
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable" make
 
@@ -221,7 +158,11 @@ libtool -static -o $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-app
 # build for simulator x86_64 & create lib
 #
 find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
-IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" ARCH="-arch x86_64" MIN_IOS="-mios-simulator-version-min=13" ./configure-iphone
+IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" \
+DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" \
+ARCH="-arch x86_64" \
+MIN_IOS="-mios-simulator-version-min=13" \
+./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable" make
 
@@ -237,7 +178,11 @@ libtool -static -o $OUT_SIM_X86_64/libpjproject.a `find . -not -path "./pjsip-ap
 # build for device arm64 & create lib
 #
 find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
-IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneOS.platform/Developer" ARCH="-arch arm64" MIN_IOS="-miphoneos-version-min=13" ./configure-iphone
+IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" \
+DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneOS.platform/Developer" \
+ARCH="-arch arm64" \
+MIN_IOS="-miphoneos-version-min=13" \
+./configure-iphone
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable -fembed-bitcode" make
 
@@ -268,7 +213,7 @@ export CFLAGS += -Wno-unused-label -Werror --target=x86_64-apple-darwin
 export LDFLAGS += -framework Network -framework Security --target=x86_64-apple-darwin
 EOF
 find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
-./configure --host=x86_64-apple-darwin20.6.0
+./configure --host=x86_64-apple-darwin
 make dep && make clean
 CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable -fembed-bitcode" make
 
@@ -317,4 +262,3 @@ END
 
 cd pjproject
 yes | sh ./build_apple_platforms.sh
-
