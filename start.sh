@@ -42,11 +42,8 @@ popd
 
 function createLib {
 	pushd $1
-	mkdir tmp && cd tmp
-	find ../ -name "*.a" -exec ar x {} \;
-	libtool -static -o ../libpjproject.a *.o
-	ranlib ../libpjproject.a
-	cd .. && rm -rf tmp
+	libtool -static -o libpjproject.a *.a
+	ranlib libpjproject.a
 	popd
 }
 
