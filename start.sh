@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Oliver Epper <oliver.epper@gmail.com>
 
 set -e
@@ -41,8 +41,8 @@ EOF
 popd
 
 function createLib {
-	pushd $1
-	libtool -static -o libpjproject.a *.a
+	pushd "$1"
+	libtool -static -o libpjproject.a ./*.a
 	ranlib libpjproject.a
 	popd
 }
@@ -60,9 +60,9 @@ sed -i '' -e '1i\
 ' pjlib/include/pj/config_site.h
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/iOS_simulator_arm64)
-if [[ -d "$OPUS" ]]
+if [[ -d "${OPUS[@]: -1}" ]]
 then
-	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+	CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
 fi
 
 DEVPATH="$(xcode-select -p)/Platforms/iPhoneSimulator.platform/Developer" \
@@ -77,7 +77,7 @@ make install
 
 sed -i '' -e '1d' pjlib/include/pj/config_site.h
 
-createLib $OUT_IOS_SIM_ARM64/lib
+createLib "$OUT_IOS_SIM_ARM64"/lib
 popd
 fi
 
@@ -94,9 +94,9 @@ sed -i '' -e '1i\
 ' pjlib/include/pj/config_site.h
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/iOS_simulator_x86_64)
-if [[ -d "$OPUS" ]]
+if [[ -d "${OPUS[@]: -1}" ]]
 then
-	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+	CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
 fi
 
 DEVPATH="$(xcode-select -p)/Platforms/iPhoneSimulator.platform/Developer" \
@@ -111,7 +111,7 @@ make install
 
 sed -i '' -e '1d' pjlib/include/pj/config_site.h
 
-createLib $OUT_IOS_SIM_X86_64/lib
+createLib "$OUT_IOS_SIM_X86_64"/lib
 popd
 fi
 
@@ -128,16 +128,16 @@ sed -i '' -e '1i\
 ' pjlib/include/pj/config_site.h
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/iOS_arm64)
-if [[ -d "$OPUS" ]]
+if [[ -d "${OPUS[@]: -1}" ]]
 then
-	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+	CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
 fi
 
 DEVPATH="$(xcode-select -p)/Platforms/iPhoneOS.platform/Developer" \
 ARCH="-arch arm64" \
 MIN_IOS="-miphoneos-version-min=13" \
 CFLAGS="-isysroot $(xcrun -sdk iphonesimulator --show-sdk-path) $CFLAGS" \
-./configure-iphone $CONFIGURE_EXTRA_PARAMS --prefix="$OUT_IOS_ARM64"
+./configure-iphone --prefix="$OUT_IOS_ARM64" "$CONFIGURE_EXTRA_PARAMS"
 
 make dep && make clean
 CFLAGS="-Wno-deprecated-declarations -Wno-unused-but-set-variable" make
@@ -145,7 +145,7 @@ make install
 
 sed -i '' -e '1d' pjlib/include/pj/config_site.h
 
-createLib $OUT_IOS_ARM64/lib
+createLib "$OUT_IOS_ARM64"/lib
 popd
 fi
 
@@ -161,13 +161,13 @@ pushd pjproject
 sed -i '' -e '/PJ_CONFIG_IPHONE/d' pjlib/include/pj/config_site.h
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macOS_arm64)
-if [[ -d "$OPUS" ]]
+if [[ -d "${OPUS[@]: -1}" ]]
 then
-	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+	CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
 fi
 
 CFLAGS="-isysroot $(xcrun -sdk macosx --show-sdk-path) -mmacosx-version-min=11 $CFLAGS" \
-./configure --prefix="$OUT_MACOS_ARM64" --host=arm-apple-darwin $CONFIGURE_EXTRA_PARAMS
+./configure --prefix="$OUT_MACOS_ARM64" --host=arm-apple-darwin "$CONFIGURE_EXTRA_PARAMS"
 
 make dep && make clean
 CFLAGS="-Wno-unused-but-set-variable" make
@@ -175,7 +175,7 @@ make install
 
 sed -i '' -e '1d' pjlib/include/pj/config_site.h
 
-createLib $OUT_MACOS_ARM64/lib
+createLib "$OUT_MACOS_ARM64"/lib
 popd
 fi
 
@@ -190,13 +190,13 @@ pushd pjproject
 sed -i '' -e '/PJ_CONFIG_IPHONE/d' pjlib/include/pj/config_site.h
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macOS_x86_64)
-if [[ -d "$OPUS" ]]
+if [[ -d "${OPUS[@]: -1}" ]]
 then
-	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+	CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
 fi
 
 CFLAGS="-isysroot $(xcrun -sdk macosx --show-sdk-path) -mmacosx-version-min=11 $CFLAGS" \
-arch -arch x86_64 ./configure --prefix="$OUT_MACOS_X86_64" --host=x86_64-apple-darwin $CONFIGURE_EXTRA_PARAMS
+arch -arch x86_64 ./configure --prefix="$OUT_MACOS_X86_64" --host=x86_64-apple-darwin "$CONFIGURE_EXTRA_PARAMS"
 
 make dep && make clean
 CFLAGS="-Wno-unused-but-set-variable" arch -arch x86_64 make
@@ -204,7 +204,7 @@ make install
 
 sed -i '' -e '1d' pjlib/include/pj/config_site.h
 
-createLib $OUT_MACOS_X86_64/lib
+createLib "$OUT_MACOS_X86_64"/lib
 popd
 fi
 
@@ -213,8 +213,8 @@ fi
 #
 if [ -f "$OUT_MACOS_ARM64"/lib/libpjproject.a ] && [ -f "$OUT_MACOS_X86_64"/lib/libpjproject.a ]; then
 OUT_MACOS="$PREFIX/macOS_arm64_x86_64"
-mkdir -p $OUT_MACOS/lib
-lipo -create $OUT_MACOS_ARM64/lib/libpjproject.a $OUT_MACOS_X86_64/lib/libpjproject.a -output $OUT_MACOS/lib/libpjproject.a
+mkdir -p "$OUT_MACOS"/lib
+lipo -create "$OUT_MACOS_ARM64"/lib/libpjproject.a "$OUT_MACOS_X86_64"/lib/libpjproject.a -output "$OUT_MACOS"/lib/libpjproject.a
 fi
 
 #
@@ -222,22 +222,22 @@ fi
 #
 if [ -f "$OUT_IOS_SIM_ARM64"/lib/libpjproject.a ] && [ -f "$OUT_IOS_SIM_X86_64"/lib/libpjproject.a ]; then
 OUT_IOS_SIM="$PREFIX/iOS_simulator_arm64_x86_64"
-mkdir -p $OUT_IOS_SIM/lib
-lipo -create $OUT_IOS_SIM_ARM64/lib/libpjproject.a $OUT_IOS_SIM_X86_64/lib/libpjproject.a -output $OUT_IOS_SIM/lib/libpjproject.a
+mkdir -p "$OUT_IOS_SIM"/lib
+lipo -create "$OUT_IOS_SIM_ARM64"/lib/libpjproject.a "$OUT_IOS_SIM_X86_64"/lib/libpjproject.a -output "$OUT_IOS_SIM"/lib/libpjproject.a
 fi
 
 XCFRAMEWORK="$PREFIX/libpjproject.xcframework"
-rm -rf $XCFRAMEWORK
+rm -rf "$XCFRAMEWORK"
 xcodebuild -create-xcframework \
--library $OUT_IOS_SIM/lib/libpjproject.a \
--library $OUT_IOS_ARM64/lib/libpjproject.a \
--library $OUT_MACOS/lib/libpjproject.a \
--output $XCFRAMEWORK
+-library "$OUT_IOS_SIM"/lib/libpjproject.a \
+-library "$OUT_IOS_ARM64"/lib/libpjproject.a \
+-library "$OUT_MACOS"/lib/libpjproject.a \
+-output "$XCFRAMEWORK"
 
-mkdir -p $XCFRAMEWORK/Headers
-cp -a "$OUT_MACOS_ARM64"/include/* $XCFRAMEWORK/Headers
+mkdir -p "$XCFRAMEWORK"/Headers
+cp -a "$OUT_MACOS_ARM64"/include/* "$XCFRAMEWORK"/Headers
 
-/usr/libexec/PlistBuddy -c 'add:HeadersPath string Headers' $XCFRAMEWORK/Info.plist
+/usr/libexec/PlistBuddy -c 'add:HeadersPath string Headers' "$XCFRAMEWORK"/Info.plist
 
 rm -rf "$OUT_IOS_SIM"
 rm -rf "$OUT_MACOS"
@@ -248,28 +248,28 @@ rm -rf "$OUT_MACOS"
 ln -sf "$PREFIX"/"macOS_$(arch)"/lib "$PREFIX"
 ln -sf "$PREFIX"/"macOS_$(arch)"/include "$PREFIX"
 
-# link in lib
-pushd $PREFIX/lib
+#
+# link xcframewoek into lib
+#
+pushd "$PREFIX"/lib
 ln -sf ../libpjproject.xcframework .
 popd
 
-	
+#
+# create pkg-config for SPM
+#
 PC_FILE_SPM=pjproject-apple-platforms-SPM.pc
 
 # for SPM
-	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_SPM
+	cat << END > "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
 prefix=$PREFIX
-
-END
-
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
 
 Name: Cpjproject
 END
 
-	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
+	echo "Version: ${PJSIP_VERSION}" >> "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
 	
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
+	cat << 'END' >> "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
 Description: Multimedia communication library
 Libs: -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
 Cflags: -I${prefix}/libpjproject.xcframework/Headers
