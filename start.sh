@@ -242,17 +242,23 @@ cp -a "$OUT_MACOS_ARM64"/include/* "$XCFRAMEWORK"/Headers
 rm -rf "$OUT_IOS_SIM"
 rm -rf "$OUT_MACOS"
 
-#
-# link lib & include
-#
-ln -sf "$PREFIX"/"macOS_$(arch)"/lib "$PREFIX"
-ln -sf "$PREFIX"/"macOS_$(arch)"/include "$PREFIX"
+# #
+# # link lib & include
+# #
+# ln -sf "$PREFIX"/"macOS_$(arch)"/lib "$PREFIX"
+# ln -sf "$PREFIX"/"macOS_$(arch)"/include "$PREFIX"
 
-#
-# link xcframewoek into lib
-#
+# #
+# # link xcframework into lib
+# #
+# pushd "$PREFIX"/lib
+# ln -sf ../libpjproject.xcframework .
+# popd
+
+mkdir -p "$PREFIX"/lib/pkgconfig
 pushd "$PREFIX"/lib
 ln -sf ../libpjproject.xcframework .
+echo "INSTALLED FRAMEWORK INTO $(pwd)"
 popd
 
 #
@@ -267,7 +273,7 @@ prefix=$PREFIX
 Name: Cpjproject
 END
 
-	echo "Version: ${PJSIP_VERSION}" >> "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
+	echo "Version: ${PJPROJECT_VERSION}" >> "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
 	
 	cat << 'END' >> "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
 Description: Multimedia communication library
