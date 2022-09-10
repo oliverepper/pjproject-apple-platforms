@@ -255,6 +255,13 @@ ln -sf "$PREFIX"/"macOS_$(arch)"/include "$PREFIX"
 
 	
 PC_FILE_SPM=pjproject-apple-platforms-SPM.pc
+
+# for SPM
+	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_SPM
+prefix=$PREFIX
+
+END
+
 	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
 pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
 pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
