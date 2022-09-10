@@ -1,117 +1,34 @@
 #!/bin/sh
 # Oliver Epper <oliver.epper@gmail.com>
 
-export PJSIP_VERSION=2.12.1
+set -e
 
-function clean {
-	echo "Cleaning"
-	rm -rf pjproject
-	rm -rf build
-	rm clean.sh .install.sh	
-}
+if [ $# -eq 0 ]
+then
+    echo "sh ./start.sh <absolute path>"
+    exit 1
+fi
 
-function install {
-	local PREFIX=$1
-	local PC_FILE=pjproject-apple-platforms.pc
-	local PC_FILE_MACOSX=pjproject-apple-platforms-MacOSX.pc
-	local PC_FILE_IPHONEOS=pjproject-apple-platforms-iPhoneOS.pc
-	local PC_FILE_IPHONESIMULATOR=pjproject-apple-platforms-iPhoneSimulator.pc
-	local PC_FILE_SPM=pjproject-apple-platforms-SPM.pc
+PREFIX=$1
+PJPROJECT_VERSION=2.12.1
+CFLAGS="-O2 -fembed-bitcode -fpic"
+TARGETS="IOS_SIM_ARM64 IOS_SIM_X86_64 IOS_ARM64 MACOS_ARM64 MACOS_X86_64"
+TARGETS=""
 
-	mkdir -p $PREFIX/lib/pkgconfig
-	
-	# copy xcframework
-	cp -a build/libpjproject.xcframework $PREFIX
-
-	# link in lib
-	pushd $PREFIX/lib
-	ln -sf ../libpjproject.xcframework .
+if [ -d pjproject ]
+then
+	pushd pjproject
+	git reset --hard $PJPROJECT_VERSION
 	popd
-
-	# link in include
-	pushd $PREFIX
-	ln -sf libpjproject.xcframework/Headers include
-	popd
-	
-	# create pkg-config files
-	# for macOS (x86_64 and arm64)
-	cat << END > $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
-prefix=$PREFIX
-
-END
-
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
-pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
-pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
-pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
-pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
-pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
-
-libdir=${prefix}/libpjproject.xcframework/macos-arm64_x86_64
-
-Name: Cpjproject
-END
-
-	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
-	
-	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX
-Description: Multimedia communication library
-Libs: -L${libdir} -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
-Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
-END
-
-	# for iOS
-	sed -e s/macos-arm64_x86_64/ios_arm64/ < $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX > $PREFIX/lib/pkgconfig/$PC_FILE_IPHONEOS
-
-	# for iOS Simulator
-	sed -e s/macos-arm64_x86_64/ios-arm64_x86_64-simulator/ < $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX > $PREFIX/lib/pkgconfig/$PC_FILE_IPHONESIMULATOR
-
-	# for SPM
-	sed -e /^libdir=/,+2d -e 's/^Libs: -L${libdir} -f/Libs: -f/' < $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX > $PREFIX/lib/pkgconfig/$PC_FILE_SPM
-
-	# link pjproject-apple-platforms.pc
-	ln -sf $PREFIX/lib/pkgconfig/$PC_FILE_MACOSX $PREFIX/lib/pkgconfig/$PC_FILE
-
-	exit 0
-}
-
-me=`basename $0`
-if [[ $me = "clean.sh" ]]
-then
-	clean
-	exit 0
-elif [[ $me == ".install.sh" ]]
-then
-	install $1
-	exit 0
+else
+	git -c advice.detachedHead=false clone --depth 1 --branch $PJPROJECT_VERSION https://github.com/pjsip/pjproject # > /dev/null 2>&1
 fi
-
-if [[ ! -f clean.sh ]]
-then
-	ln -sf start.sh clean.sh
-fi
-
-if [[ ! -f .install.sh ]]
-then
-	ln -sf start.sh .install.sh
-fi
-
-git -c advice.detachedHead=false clone --depth 1 --branch $PJSIP_VERSION https://github.com/pjsip/pjproject # > /dev/null 2>&1
-
-cat << 'END' > pjproject/build_apple_platforms.sh
-#!/bin/sh
 
 #
-# ask user if she wants to overwrite files
+# create base configuration for pjproject build
 #
-read -p "This will overwrite site_config.h and user.mak. Continue?" -n 1 -r
-if [[ ! $REPLY =~ ^[Yy]$ ]]
-then
-   [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
-fi
-
+pushd pjproject
 cat << EOF > pjlib/include/pj/config_site.h
-#define PJ_CONFIG_IPHONE 1
 #define PJ_HAS_SSL_SOCK 1
 #undef PJ_SSL_SOCK_IMP
 #define PJ_SSL_SOCK_IMP PJ_SSL_SOCK_IMP_APPLE
@@ -122,142 +39,215 @@ cat << EOF > user.mak
 export CFLAGS += -Wno-unused-label -Werror
 export LDFLAGS += -framework Network -framework Security
 EOF
+popd
 
+function createLib {
+	pushd $1
+	mkdir tmp && cd tmp
+	find ../ -name "*.a" -exec ar x {} \;
+	libtool -static -o ../libpjproject.a *.o
+	ranlib ../libpjproject.a
+	cd .. && rm -rf tmp
+	popd
+}
 
 #
-# setup path to Xcode installation
+# build for iOS simulator running on arm64
 #
-COMMAND_LINE_TOOLS_PATH="$(xcode-select -p)"
+OUT_IOS_SIM_ARM64=$PREFIX/iOS_simulator_arm64
+if [[ $TARGETS =~ "IOS_SIM_ARM64" ]]; then
+rm -rf "$OUT_IOS_SIM_ARM64"
+pushd pjproject
 
-#
-# where to build
-#
-BUILD_DIR=../build
+sed -i '' -e '1i\
+#define PJ_CONFIG_IPHONE 1
+' pjlib/include/pj/config_site.h
 
-#
-# build for simulator arm64 & create lib
-#
-find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
-IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" \
-DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" \
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/iOS_simulator_arm64)
+if [[ -d "$OPUS" ]]
+then
+	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+fi
+
+DEVPATH="$(xcode-select -p)/Platforms/iPhoneSimulator.platform/Developer" \
 ARCH="-arch arm64" \
-MIN_IOS="-mios-simulator-version-min=13" \
-./configure-iphone --with-opus=/Users/oliver/Developer/opus-apple-platforms/build/iOS_simulator_arm64
+MIN_IOS="-miphonesimulator-version-min=13" \
+CFLAGS="-isysroot $(xcrun -sdk iphonesimulator --show-sdk-path) $CFLAGS" \
+./configure-iphone --prefix="$OUT_IOS_SIM_ARM64" "$CONFIGURE_EXTRA_PARAMS"
+
 make dep && make clean
-CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable" make
+CFLAGS="-Wno-deprecated-declarations -Wno-unused-but-set-variable" make
+make install
 
-OUT_SIM_ARM64="$BUILD_DIR/sim_arm64"
-mkdir -p $OUT_SIM_ARM64
-# the Makefile is a little more selective about which .o files go into the lib
-# so let's use libtool instead of ar
-# ar -csr $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -name "*.o"`
-libtool -static -o $OUT_SIM_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a"`
+sed -i '' -e '1d' pjlib/include/pj/config_site.h
+
+createLib $OUT_IOS_SIM_ARM64/lib
+popd
+fi
 
 #
-# build for simulator x86_64 & create lib
+# build for iOS simulator running on x86_64
 #
-find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
-IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk" \
-DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneSimulator.platform/Developer" \
+OUT_IOS_SIM_X86_64=$PREFIX/iOS_simulator_x86_64
+if [[ $TARGETS =~ "IOS_SIM_X86_64" ]]; then
+rm -rf "$OUT_IOS_SIM_X86_64"
+pushd pjproject
+
+sed -i '' -e '1i\
+#define PJ_CONFIG_IPHONE 1
+' pjlib/include/pj/config_site.h
+
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/iOS_simulator_x86_64)
+if [[ -d "$OPUS" ]]
+then
+	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+fi
+
+DEVPATH="$(xcode-select -p)/Platforms/iPhoneSimulator.platform/Developer" \
 ARCH="-arch x86_64" \
-MIN_IOS="-mios-simulator-version-min=13" \
-./configure-iphone
+MIN_IOS="-miphonesimulator-version-min=13.0" \
+CFLAGS="-isysroot $(xcrun -sdk iphonesimulator --show-sdk-path) $CFLAGS" \
+./configure-iphone --prefix="$OUT_IOS_SIM_X86_64" "$CONFIGURE_EXTRA_PARAMS"
+
 make dep && make clean
-CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable" make
+CFLAGS="-Wno-deprecated-declarations -Wno-unused-but-set-variable" make
+make install
 
-OUT_SIM_X86_64="$BUILD_DIR/sim_x86_64"
-mkdir -p $OUT_SIM_X86_64
-# the Makefile is a little more selective about which .o files go into the lib
-# so let's use libtool instead of ar
-# ar -csr $OUT_SIM_X86_64/libpjproject.a `find . -not -path "./pjsip-apps/*" -name "*.o"`
-libtool -static -o $OUT_SIM_X86_64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a"`
+sed -i '' -e '1d' pjlib/include/pj/config_site.h
 
+createLib $OUT_IOS_SIM_X86_64/lib
+popd
+fi
 
 #
-# build for device arm64 & create lib
+# build for iOS arm64
 #
-find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
-IPHONESDK="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk" \
-DEVPATH="$COMMAND_LINE_TOOLS_PATH/Platforms/iPhoneOS.platform/Developer" \
+OUT_IOS_ARM64=$PREFIX/iOS_arm64
+if [[ $TARGETS =~ "IOS_ARM64" ]]; then
+rm -rf "$OUT_IOS_ARM64"
+pushd pjproject
+
+sed -i '' -e '1i\
+#define PJ_CONFIG_IPHONE 1
+' pjlib/include/pj/config_site.h
+
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/iOS_arm64)
+if [[ -d "$OPUS" ]]
+then
+	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+fi
+
+DEVPATH="$(xcode-select -p)/Platforms/iPhoneOS.platform/Developer" \
 ARCH="-arch arm64" \
 MIN_IOS="-miphoneos-version-min=13" \
-./configure-iphone
+CFLAGS="-isysroot $(xcrun -sdk iphonesimulator --show-sdk-path) $CFLAGS" \
+./configure-iphone $CONFIGURE_EXTRA_PARAMS --prefix="$OUT_IOS_ARM64"
+
 make dep && make clean
-CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable -fembed-bitcode" make
+CFLAGS="-Wno-deprecated-declarations -Wno-unused-but-set-variable" make
+make install
 
-OUT_DEV_ARM64="$BUILD_DIR/dev_arm64"
-mkdir -p $OUT_DEV_ARM64
-libtool -static -o $OUT_DEV_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a"`
+sed -i '' -e '1d' pjlib/include/pj/config_site.h
+
+createLib $OUT_IOS_ARM64/lib
+popd
+fi
 
 
 #
-# build for Mac arm64 & create lib
+# build for macOS arm64
 #
-find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
-sed -i '' '1d' pjlib/include/pj/config_site.h
-./configure
+OUT_MACOS_ARM64=$PREFIX/macOS_arm64
+if [[ $TARGETS =~ "MACOS_ARM64" ]]; then
+rm -rf "$OUT_MACOS_ARM64"
+pushd pjproject
+
+sed -i '' -e '/PJ_CONFIG_IPHONE/d' pjlib/include/pj/config_site.h
+
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macOS_arm64)
+if [[ -d "$OPUS" ]]
+then
+	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+fi
+
+CFLAGS="-isysroot $(xcrun -sdk macosx --show-sdk-path) -mmacosx-version-min=11 $CFLAGS" \
+./configure --prefix="$OUT_MACOS_ARM64" --host=arm-apple-darwin $CONFIGURE_EXTRA_PARAMS
+
 make dep && make clean
-CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable -fembed-bitcode" make
+CFLAGS="-Wno-unused-but-set-variable" make
+make install
 
-OUT_MAC_ARM64="$BUILD_DIR/mac_arm64"
-mkdir -p $OUT_MAC_ARM64
-libtool -static -o $OUT_MAC_ARM64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a"`
+sed -i '' -e '1d' pjlib/include/pj/config_site.h
 
+createLib $OUT_MACOS_ARM64/lib
+popd
+fi
 
 #
-# build for Mac x86_64 & create lib
+# build for macOS x86_64
 #
-cat << EOF > user.mak
-export CFLAGS += -Wno-unused-label -Werror --target=x86_64-apple-darwin
-export LDFLAGS += -framework Network -framework Security --target=x86_64-apple-darwin
-EOF
-find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a" -exec rm {} \;
-./configure --host=x86_64-apple-darwin
+OUT_MACOS_X86_64=$PREFIX/macOS_x86_64
+if [[ $TARGETS =~ "MACOS_X86_64" ]]; then
+rm -rf "$OUT_MACOS_X86_64"
+pushd pjproject
+
+sed -i '' -e '/PJ_CONFIG_IPHONE/d' pjlib/include/pj/config_site.h
+
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macOS_x86_64)
+if [[ -d "$OPUS" ]]
+then
+	CONFIGURE_EXTRA_PARAMS="--with-opus=$OPUS"
+fi
+
+CFLAGS="-isysroot $(xcrun -sdk macosx --show-sdk-path) -mmacosx-version-min=11 $CFLAGS" \
+arch -arch x86_64 ./configure --prefix="$OUT_MACOS_X86_64" --host=x86_64-apple-darwin $CONFIGURE_EXTRA_PARAMS
+
 make dep && make clean
-CFLAGS="-Wno-macro-redefined -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-private-field -Wno-unused-but-set-variable -fembed-bitcode" make
+CFLAGS="-Wno-unused-but-set-variable" arch -arch x86_64 make
+make install
 
-OUT_MAC_X86_64="$BUILD_DIR/mac_x86_64"
-mkdir -p $OUT_MAC_X86_64
-libtool -static -o $OUT_MAC_X86_64/libpjproject.a `find . -not -path "./pjsip-apps/*" -not -path "$BUILD_DIR/*" -name "*.a"`
+sed -i '' -e '1d' pjlib/include/pj/config_site.h
 
+createLib $OUT_MACOS_X86_64/lib
+popd
+fi
 
 #
 # create fat lib for the mac
 #
-OUT_MAC="$BUILD_DIR/mac"
-mkdir -p $OUT_MAC
-lipo -create $OUT_MAC_ARM64/libpjproject.a $OUT_MAC_X86_64/libpjproject.a -output $OUT_MAC/libpjproject.a
+if [ -f "$OUT_MACOS_ARM64"/lib/libpjproject.a ] && [ -f "$OUT_MACOS_X86_64"/lib/libpjproject.a ]; then
+OUT_MACOS="$PREFIX/macOS_arm64_x86_64"
+mkdir -p $OUT_MACOS/lib
+lipo -create $OUT_MACOS_ARM64/lib/libpjproject.a $OUT_MACOS_X86_64/lib/libpjproject.a -output $OUT_MACOS/lib/libpjproject.a
+fi
 
 #
 # create fat lib for the simulator
 #
-OUT_SIM="$BUILD_DIR/simulator"
-mkdir -p $OUT_SIM
-lipo -create $OUT_SIM_ARM64/libpjproject.a $OUT_SIM_X86_64/libpjproject.a -output $OUT_SIM/libpjproject.a
+if [ -f "$OUT_IOS_SIM_ARM64"/lib/libpjproject.a ] && [ -f "$OUT_IOS_SIM_X86_64"/lib/libpjproject.a ]; then
+OUT_IOS_SIM="$PREFIX/iOS_simulator_arm64_x86_64"
+mkdir -p $OUT_IOS_SIM/lib
+lipo -create $OUT_IOS_SIM_ARM64/lib/libpjproject.a $OUT_IOS_SIM_X86_64/lib/libpjproject.a -output $OUT_IOS_SIM/lib/libpjproject.a
+fi
 
-#
-# collect headers & create xcframework
-#
-LIBS="pjlib pjlib-util pjmedia pjnath pjsip" # third_party"
-OUT_HEADERS="$BUILD_DIR/headers"
-for path in $LIBS; do
-	mkdir -p $OUT_HEADERS/$path
-	cp -a $path/include/* $OUT_HEADERS/$path
-done
-
-XCFRAMEWORK="$BUILD_DIR/libpjproject.xcframework"
+XCFRAMEWORK="$PREFIX/libpjproject.xcframework"
 rm -rf $XCFRAMEWORK
 xcodebuild -create-xcframework \
--library $OUT_DEV_ARM64/libpjproject.a \
--library $OUT_SIM/libpjproject.a \
--library $OUT_MAC/libpjproject.a \
+-library $OUT_IOS_SIM/lib/libpjproject.a \
+-library $OUT_IOS_ARM64/lib/libpjproject.a \
+-library $OUT_MACOS/lib/libpjproject.a \
 -output $XCFRAMEWORK
 
 mkdir -p $XCFRAMEWORK/Headers
-cp -a $OUT_HEADERS/* $XCFRAMEWORK/Headers
+cp -a "$OUT_MACOS_ARM64"/include/* $XCFRAMEWORK/Headers
 
 /usr/libexec/PlistBuddy -c 'add:HeadersPath string Headers' $XCFRAMEWORK/Info.plist
-END
 
-cd pjproject
-yes | sh ./build_apple_platforms.sh
+rm -rf "$OUT_IOS_SIM"
+rm -rf "$OUT_MACOS"
+
+#
+# link lib & include
+#
+ln -sf "$PREFIX"/"macOS_$(arch)"/lib "$PREFIX"
+ln -sf "$PREFIX"/"macOS_$(arch)"/include "$PREFIX"
