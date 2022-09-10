@@ -250,3 +250,25 @@ rm -rf "$OUT_MACOS"
 #
 ln -sf "$PREFIX"/"macOS_$(arch)"/lib "$PREFIX"
 ln -sf "$PREFIX"/"macOS_$(arch)"/include "$PREFIX"
+
+
+
+	
+PC_FILE_SPM=pjproject-apple-platforms-SPM.pc
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
+pjsip=${prefix}/libpjproject.xcframework/Headers/pjsip
+pjlib=${prefix}/libpjproject.xcframework/Headers/pjlib
+pjlibutil=${prefix}/libpjproject.xcframework/Headers/pjlib-util
+pjmedia=${prefix}/libpjproject.xcframework/Headers/pjmedia
+pjnath=${prefix}/libpjproject.xcframework/Headers/pjnath
+
+Name: Cpjproject
+END
+
+	echo "Version: ${PJSIP_VERSION}" >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
+	
+	cat << 'END' >> $PREFIX/lib/pkgconfig/$PC_FILE_SPM
+Description: Multimedia communication library
+Libs: -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
+Cflags: -I${pjsip} -I${pjlib} -I${pjlibutil} -I${pjmedia} -I${pjnath}
+END
