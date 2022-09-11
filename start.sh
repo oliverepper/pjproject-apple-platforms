@@ -273,5 +273,5 @@ END
 	cat << 'END' >> "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
 Description: Multimedia communication library
 Libs: -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
-Cflags: -I${prefix}/libpjproject.xcframework/Headers
+Cflags: -I${XCFRAMEWORK}/Headers
 END
