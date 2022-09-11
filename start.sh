@@ -42,7 +42,11 @@ popd
 
 function createLib {
 	pushd "$1"
-	libtool -static -o libpjproject.a ./*.a
+	if [ -d "${OPUS[@]: -1}" ]; then
+		libtool -static -o libpjproject.a ./*.a "${OPUS[@] -1}"/lib/libopus.a
+	else
+		libtool -static -o libpjproject.a ./*.a
+	fi
 	ranlib libpjproject.a
 	popd
 }
@@ -226,7 +230,11 @@ mkdir -p "$OUT_IOS_SIM"/lib
 lipo -create "$OUT_IOS_SIM_ARM64"/lib/libpjproject.a "$OUT_IOS_SIM_X86_64"/lib/libpjproject.a -output "$OUT_IOS_SIM"/lib/libpjproject.a
 fi
 
-XCFRAMEWORK="$PREFIX/libpjproject.xcframework"
+#
+# create xcframework
+#
+mkdir -p "$PREFIX"/lib
+XCFRAMEWORK="$PREFIX/lib/libpjproject.xcframework"
 rm -rf "$XCFRAMEWORK"
 xcodebuild -create-xcframework \
 -library "$OUT_IOS_SIM"/lib/libpjproject.a \
@@ -242,24 +250,11 @@ cp -a "$OUT_MACOS_ARM64"/include/* "$XCFRAMEWORK"/Headers
 rm -rf "$OUT_IOS_SIM"
 rm -rf "$OUT_MACOS"
 
-# #
-# # link lib & include
-# #
-# ln -sf "$PREFIX"/"macOS_$(arch)"/lib "$PREFIX"
-# ln -sf "$PREFIX"/"macOS_$(arch)"/include "$PREFIX"
-
-# #
-# # link xcframework into lib
-# #
-# pushd "$PREFIX"/lib
-# ln -sf ../libpjproject.xcframework .
-# popd
-
-mkdir -p "$PREFIX"/lib/pkgconfig
-pushd "$PREFIX"/lib
-ln -sf ../libpjproject.xcframework .
-echo "INSTALLED FRAMEWORK INTO $(pwd)"
-popd
+#
+# don't just link lib & include
+#
+mkdir -p "$PREFIX"/{"lib/pkgconfig",include}
+cp -a "$PREFIX"/"macOS_$(arch)"/include/* "$PREFIX"/include
 
 #
 # create pkg-config for SPM
