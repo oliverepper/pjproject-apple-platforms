@@ -257,6 +257,13 @@ mkdir -p "$PREFIX"/{"lib/pkgconfig",include}
 cp -a "$PREFIX"/"macOS_$(arch)"/include/* "$PREFIX"/include
 
 #
+# create pkg-config for system
+#
+pushd "$PREFIX"/lib/pkgconfig
+ln -sf ../../macOS_"$(arch)"/lib/pkgconfig/libpjproject.pc .
+popd
+
+#
 # create pkg-config for SPM
 #
 PC_FILE_SPM=pjproject-apple-platforms-SPM.pc
