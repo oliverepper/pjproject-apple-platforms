@@ -238,14 +238,12 @@ XCFRAMEWORK="$PREFIX/lib/libpjproject.xcframework"
 rm -rf "$XCFRAMEWORK"
 xcodebuild -create-xcframework \
 -library "$OUT_IOS_SIM"/lib/libpjproject.a \
+-headers "$OUT_IOS_SIM_ARM64"/include \
 -library "$OUT_IOS_ARM64"/lib/libpjproject.a \
+-headers "$OUT_IOS_ARM64"/include \
 -library "$OUT_MACOS"/lib/libpjproject.a \
+-headers "$OUT_MACOS_ARM64"/include \
 -output "$XCFRAMEWORK"
-
-mkdir -p "$XCFRAMEWORK"/Headers
-cp -a "$OUT_MACOS_ARM64"/include/* "$XCFRAMEWORK"/Headers
-
-/usr/libexec/PlistBuddy -c 'add:HeadersPath string Headers' "$XCFRAMEWORK"/Info.plist
 
 rm -rf "$OUT_IOS_SIM"
 rm -rf "$OUT_MACOS"
@@ -262,23 +260,3 @@ cp -a "$PREFIX"/"macOS_$(arch)"/include/* "$PREFIX"/include
 pushd "$PREFIX"/lib/pkgconfig
 ln -sf ../../macOS_"$(arch)"/lib/pkgconfig/libpjproject.pc .
 popd
-
-#
-# create pkg-config for SPM
-#
-PC_FILE_SPM=pjproject-apple-platforms-SPM.pc
-
-# for SPM
-	cat << END > "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
-prefix=$PREFIX
-
-Name: Cpjproject
-END
-
-	echo "Version: ${PJPROJECT_VERSION}" >> "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
-	
-	cat << 'END' >> "$PREFIX"/lib/pkgconfig/$PC_FILE_SPM
-Description: Multimedia communication library
-Libs: -framework Network -framework Security -framework AudioToolbox -framework AVFoundation -framework CoreAudio -framework Foundation -lpjproject
-Cflags: -I${prefix}/lib/libpjproject.xcframework/Headers
-END
