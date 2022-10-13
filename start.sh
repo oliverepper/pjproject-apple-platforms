@@ -64,6 +64,7 @@ popd
 
 function prepare {
     local WANTS_IPHONE=$1
+    local WANTS_VIDEO=$2
 
     git reset --hard
     git clean -fxd
@@ -85,7 +86,7 @@ EOF
     if [[ "${WANTS_VIDEO}" = "YES" ]]; then
         echo "🔧 adding video support"
         sed -i '' -e '1i\
-#define PJMEDIA_HAS_VIDEO 1
+#define PJMEDIA_HAS_VIDEO 1 \
 #define PJMEDIA_HAS_VID_TOOLBOX_CODEC 1
 ' pjlib/include/pj/config_site.h
     fi
