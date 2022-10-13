@@ -75,14 +75,14 @@ function prepare {
 #include <pj/config_site_sample.h>
 EOF
 
-    if [[ ${WANTS_IPHONE}="YES" ]]; then
+    if [[ "${WANTS_IPHONE}" = "YES" ]]; then
         echo "🔧 adding iPhone support"
         sed -i '' -e '1i\
 #define PJ_CONFIG_IPHONE 1
 ' pjlib/include/pj/config_site.h
     fi
 
-    if [[ ${WANTS_VIDEO}="YES" ]]; then
+    if [[ "${WANTS_VIDEO}" = "YES" ]]; then
         echo "🔧 adding video support"
         sed -i '' -e '1i\
 #define PJMEDIA_HAS_VIDEO 1
@@ -92,159 +92,159 @@ EOF
 }
 
 
-# #
-# # build for iOS on arm64
-# #
-# rm -rf "${IOS_ARM64_INSTALL_PREFIX}"
-# pushd pjproject
-# prepare YES
+#
+# build for iOS on arm64
+#
+rm -rf "${IOS_ARM64_INSTALL_PREFIX}"
+pushd pjproject
+prepare YES
 
-# OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-arm64)
-# if [[ -d "${OPUS[@]: -1}" ]]
-# then
-#     CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
-# fi
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-arm64)
+if [[ -d "${OPUS[@]: -1}" ]]
+then
+    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+fi
 
-# SDKPATH=$(xcrun -sdk iphoneos --show-sdk-path)
-# ARCH="arm64"
-# CFLAGS="-isysroot $SDKPATH -miphoneos-version-min=13 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH" \
-# LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch $ARCH" \
-# ./aconfigure --prefix="$IOS_ARM64_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+SDKPATH=$(xcrun -sdk iphoneos --show-sdk-path)
+ARCH="arm64"
+CFLAGS="-isysroot $SDKPATH -miphoneos-version-min=13 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH" \
+LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch $ARCH" \
+./aconfigure --prefix="$IOS_ARM64_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
 
-# make dep && make clean
-# make
-# make install
+make dep && make clean
+make
+make install
 
-# createLib "$IOS_ARM64_INSTALL_PREFIX"/lib
-# popd
-
-
-# #
-# # build for iOS simulator on arm64
-# #
-# rm -rf "${IOS_ARM64_SIMULATOR_INSTALL_PREFIX}"
-# pushd pjproject
-# prepare YES
-
-# OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-arm64-simulator)
-# if [[ -d "${OPUS[@]: -1}" ]]
-# then
-#     CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
-# fi
-
-# SDKPATH=$(xcrun -sdk iphonesimulator --show-sdk-path)
-# ARCH="arm64"
-# CFLAGS="-isysroot $SDKPATH -miphonesimulator-version-min=13 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH" \
-# LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch $ARCH" \
-# ./aconfigure --prefix="$IOS_ARM64_SIMULATOR_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
-
-# make dep && make clean
-# make
-# make install
-
-# createLib "$IOS_ARM64_SIMULATOR_INSTALL_PREFIX"/lib
-# popd
+createLib "$IOS_ARM64_INSTALL_PREFIX"/lib
+popd
 
 
-# #
-# # build for iOS simulator on x86_64
-# #
-# rm -rf "${IOS_X86_64_SIMULATOR_INSTALL_PREFIX}"
-# pushd pjproject
-# prepare YES
+#
+# build for iOS simulator on arm64
+#
+rm -rf "${IOS_ARM64_SIMULATOR_INSTALL_PREFIX}"
+pushd pjproject
+prepare YES
 
-# OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-x86_64-simulator)
-# if [[ -d "${OPUS[@]: -1}" ]]
-# then
-#     CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
-# fi
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-arm64-simulator)
+if [[ -d "${OPUS[@]: -1}" ]]
+then
+    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+fi
 
-# SDKPATH=$(xcrun -sdk iphonesimulator --show-sdk-path)
-# ARCH="x86_64"
-# CFLAGS="-isysroot $SDKPATH -miphonesimulator-version-min=13 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH" \
-# LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch $ARCH" \
-# ./aconfigure --prefix="$IOS_X86_64_SIMULATOR_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+SDKPATH=$(xcrun -sdk iphonesimulator --show-sdk-path)
+ARCH="arm64"
+CFLAGS="-isysroot $SDKPATH -miphonesimulator-version-min=13 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH" \
+LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch $ARCH" \
+./aconfigure --prefix="$IOS_ARM64_SIMULATOR_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
 
-# make dep && make clean
-# make
-# make install
+make dep && make clean
+make
+make install
 
-# createLib "$IOS_X86_64_SIMULATOR_INSTALL_PREFIX"/lib
-# popd
-
-
-# #
-# # build fat lib for simulator
-# #
-# mkdir -p "${IOS_ARM64_X86_64_SIMULATOR_INSTALL_PREFIX}/lib"
-# lipo -create \
-#     "${IOS_ARM64_SIMULATOR_INSTALL_PREFIX}/lib/libpjproject.a" \
-#     "${IOS_X86_64_SIMULATOR_INSTALL_PREFIX}/lib/libpjproject.a" \
-#     -output \
-#     "${IOS_ARM64_X86_64_SIMULATOR_INSTALL_PREFIX}/lib/libpjproject.a"
+createLib "$IOS_ARM64_SIMULATOR_INSTALL_PREFIX"/lib
+popd
 
 
-# #
-# # build for Catalyst on arm64
-# #
-# rm -rf "${IOS_ARM64_MACCATALYST_INSTALL_PREFIX}"
-# pushd pjproject
-# prepare YES
+#
+# build for iOS simulator on x86_64
+#
+rm -rf "${IOS_X86_64_SIMULATOR_INSTALL_PREFIX}"
+pushd pjproject
+prepare YES
 
-# OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-arm64-maccatalyst)
-# if [[ -d "${OPUS[@]: -1}" ]]
-# then
-#     CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
-# fi
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-x86_64-simulator)
+if [[ -d "${OPUS[@]: -1}" ]]
+then
+    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+fi
 
-# SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
-# ARCH="arm64"
-# CFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -miphoneos-version-min=13.1 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
-# LDFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -framework Network -framework Security -framework Foundation -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
-# ./aconfigure --prefix="$IOS_ARM64_MACCATALYST_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+SDKPATH=$(xcrun -sdk iphonesimulator --show-sdk-path)
+ARCH="x86_64"
+CFLAGS="-isysroot $SDKPATH -miphonesimulator-version-min=13 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH" \
+LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch $ARCH" \
+./aconfigure --prefix="$IOS_X86_64_SIMULATOR_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
 
-# make dep && make clean
-# make VERBOSE=1
-# make install
+make dep && make clean
+make
+make install
 
-# createLib "$IOS_ARM64_MACCATALYST_INSTALL_PREFIX"/lib
-# popd
-
-
-# # build for Catalyst on x86_64
-# rm -rf "${IOS_X86_64_MACCATALYST_INSTALL_PREFIX}"
-# pushd pjproject
-# prepare YES
-
-# OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-x86_64-maccatalyst)
-# if [[ -d "${OPUS[@]: -1}" ]]
-# then
-#     CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
-# fi
-
-# SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
-# ARCH="x86_64"
-# CFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -miphoneos-version-min=13.1 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
-# LDFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -framework Network -framework Security -framework Foundation -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
-# ./aconfigure --prefix="$IOS_X86_64_MACCATALYST_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
-
-# make dep && make clean
-# make VERBOSE=1
-# make install
-
-# createLib "$IOS_X86_64_MACCATALYST_INSTALL_PREFIX"/lib
-# popd
+createLib "$IOS_X86_64_SIMULATOR_INSTALL_PREFIX"/lib
+popd
 
 
-# #
-# # build fat lib for catalyst
-# #
-# mkdir -p "${IOS_ARM64_X86_64_MACCATALYST_INSTALL_PREFIX}/lib"
-# lipo -create \
-#     "${IOS_ARM64_MACCATALYST_INSTALL_PREFIX}/lib/libpjproject.a" \
-#     "${IOS_X86_64_MACCATALYST_INSTALL_PREFIX}/lib/libpjproject.a" \
-#     -output \
-#     "${IOS_ARM64_X86_64_MACCATALYST_INSTALL_PREFIX}/lib/libpjproject.a"
+#
+# build fat lib for simulator
+#
+mkdir -p "${IOS_ARM64_X86_64_SIMULATOR_INSTALL_PREFIX}/lib"
+lipo -create \
+    "${IOS_ARM64_SIMULATOR_INSTALL_PREFIX}/lib/libpjproject.a" \
+    "${IOS_X86_64_SIMULATOR_INSTALL_PREFIX}/lib/libpjproject.a" \
+    -output \
+    "${IOS_ARM64_X86_64_SIMULATOR_INSTALL_PREFIX}/lib/libpjproject.a"
+
+
+#
+# build for Catalyst on arm64
+#
+rm -rf "${IOS_ARM64_MACCATALYST_INSTALL_PREFIX}"
+pushd pjproject
+prepare YES
+
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-arm64-maccatalyst)
+if [[ -d "${OPUS[@]: -1}" ]]
+then
+    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+fi
+
+SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
+ARCH="arm64"
+CFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -miphoneos-version-min=13.1 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
+LDFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -framework Network -framework Security -framework Foundation -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
+./aconfigure --prefix="$IOS_ARM64_MACCATALYST_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+
+make dep && make clean
+make VERBOSE=1
+make install
+
+createLib "$IOS_ARM64_MACCATALYST_INSTALL_PREFIX"/lib
+popd
+
+
+# build for Catalyst on x86_64
+rm -rf "${IOS_X86_64_MACCATALYST_INSTALL_PREFIX}"
+pushd pjproject
+prepare YES
+
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-x86_64-maccatalyst)
+if [[ -d "${OPUS[@]: -1}" ]]
+then
+    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+fi
+
+SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
+ARCH="x86_64"
+CFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -miphoneos-version-min=13.1 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
+LDFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -framework Network -framework Security -framework Foundation -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
+./aconfigure --prefix="$IOS_X86_64_MACCATALYST_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+
+make dep && make clean
+make VERBOSE=1
+make install
+
+createLib "$IOS_X86_64_MACCATALYST_INSTALL_PREFIX"/lib
+popd
+
+
+#
+# build fat lib for catalyst
+#
+mkdir -p "${IOS_ARM64_X86_64_MACCATALYST_INSTALL_PREFIX}/lib"
+lipo -create \
+    "${IOS_ARM64_MACCATALYST_INSTALL_PREFIX}/lib/libpjproject.a" \
+    "${IOS_X86_64_MACCATALYST_INSTALL_PREFIX}/lib/libpjproject.a" \
+    -output \
+    "${IOS_ARM64_X86_64_MACCATALYST_INSTALL_PREFIX}/lib/libpjproject.a"
 
 
 #
@@ -275,73 +275,74 @@ make
 make install
 
 createLib "$MACOS_ARM64_INSTALL_PREFIX"/lib
+unset SDL
 popd
 
 
-# #
-# # build for macOS on x86_64
-# #
-# rm -rf "${MACOS_X86_64_INSTALL_PREFIX}"
-# pushd pjproject
-# prepare NO
+#
+# build for macOS on x86_64
+#
+rm -rf "${MACOS_X86_64_INSTALL_PREFIX}"
+pushd pjproject
+prepare NO
 
-# OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macos-x86_64)
-# if [[ -d "${OPUS[@]: -1}" ]]
-# then
-#     CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
-# fi
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macos-x86_64)
+if [[ -d "${OPUS[@]: -1}" ]]
+then
+    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+fi
 
-# SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
-# ARCH="x86_64"
-# CFLAGS="-isysroot $SDKPATH -mmacosx-version-min=11 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch ${ARCH}" \
-# LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch ${ARCH}" \
-# ./aconfigure --prefix="$MACOS_X86_64_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin "$CONFIGURE_EXTRA_PARAMS"
+SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
+ARCH="x86_64"
+CFLAGS="-isysroot $SDKPATH -mmacosx-version-min=11 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch ${ARCH}" \
+LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch ${ARCH}" \
+./aconfigure --prefix="$MACOS_X86_64_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin "$CONFIGURE_EXTRA_PARAMS"
 
-# make dep && make clean
-# arch -arch x86_64 make
-# make install
+make dep && make clean
+arch -arch x86_64 make
+make install
 
-# createLib "$MACOS_X86_64_INSTALL_PREFIX"/lib
-# popd
-
-
-# #
-# # build fat lib for macos
-# #
-# mkdir -p "${MACOS_ARM64_X86_64_INSTALL_PREFIX}/lib"
-# lipo -create \
-#     "${MACOS_ARM64_INSTALL_PREFIX}/lib/libpjproject.a" \
-#     "${MACOS_X86_64_INSTALL_PREFIX}/lib/libpjproject.a" \
-#     -output \
-#     "${MACOS_ARM64_X86_64_INSTALL_PREFIX}/lib/libpjproject.a"
+createLib "$MACOS_X86_64_INSTALL_PREFIX"/lib
+popd
 
 
-# #
-# # create xcframework
-# #
-# mkdir -p "$PREFIX"/lib
-# XCFRAMEWORK="$PREFIX/lib/libpjproject.xcframework"
-# rm -rf "$XCFRAMEWORK"
-# xcodebuild -create-xcframework \
-# -library "${IOS_ARM64_INSTALL_PREFIX}/lib/libpjproject.a" \
-# -headers "${IOS_ARM64_INSTALL_PREFIX}/include" \
-# -library "${IOS_ARM64_X86_64_SIMULATOR_INSTALL_PREFIX}/lib/libpjproject.a" \
-# -headers "${IOS_ARM64_SIMULATOR_INSTALL_PREFIX}/include" \
-# -library "${IOS_ARM64_X86_64_MACCATALYST_INSTALL_PREFIX}/lib/libpjproject.a" \
-# -headers "${IOS_ARM64_MACCATALYST_INSTALL_PREFIX}/include" \
-# -library "${MACOS_ARM64_X86_64_INSTALL_PREFIX}/lib/libpjproject.a" \
-# -headers "${MACOS_ARM64_INSTALL_PREFIX}/include" \
-# -output "${XCFRAMEWORK}"
+#
+# build fat lib for macos
+#
+mkdir -p "${MACOS_ARM64_X86_64_INSTALL_PREFIX}/lib"
+lipo -create \
+    "${MACOS_ARM64_INSTALL_PREFIX}/lib/libpjproject.a" \
+    "${MACOS_X86_64_INSTALL_PREFIX}/lib/libpjproject.a" \
+    -output \
+    "${MACOS_ARM64_X86_64_INSTALL_PREFIX}/lib/libpjproject.a"
 
-# #
-# # install the system version
-# #
-# cp -a "${PREFIX}/macOS-$(arch)/include" "${PREFIX}"
-# cp -a "${PREFIX}/macOS-$(arch)/lib" "${PREFIX}"
 
-# #
-# # clean-up for now
-# #
-# rm -rf "${IOS_ARM64_X86_64_SIMULATOR_INSTALL_PREFIX}"
-# rm -rf "${IOS_ARM64_X86_64_MACCATALYST_INSTALL_PREFIX}"
-# rm -rf "${MACOS_ARM64_X86_64_INSTALL_PREFIX}"
+#
+# create xcframework
+#
+mkdir -p "$PREFIX"/lib
+XCFRAMEWORK="$PREFIX/lib/libpjproject.xcframework"
+rm -rf "$XCFRAMEWORK"
+xcodebuild -create-xcframework \
+-library "${IOS_ARM64_INSTALL_PREFIX}/lib/libpjproject.a" \
+-headers "${IOS_ARM64_INSTALL_PREFIX}/include" \
+-library "${IOS_ARM64_X86_64_SIMULATOR_INSTALL_PREFIX}/lib/libpjproject.a" \
+-headers "${IOS_ARM64_SIMULATOR_INSTALL_PREFIX}/include" \
+-library "${IOS_ARM64_X86_64_MACCATALYST_INSTALL_PREFIX}/lib/libpjproject.a" \
+-headers "${IOS_ARM64_MACCATALYST_INSTALL_PREFIX}/include" \
+-library "${MACOS_ARM64_X86_64_INSTALL_PREFIX}/lib/libpjproject.a" \
+-headers "${MACOS_ARM64_INSTALL_PREFIX}/include" \
+-output "${XCFRAMEWORK}"
+
+#
+# install the system version
+#
+cp -a "${PREFIX}/macOS-$(arch)/include" "${PREFIX}"
+cp -a "${PREFIX}/macOS-$(arch)/lib" "${PREFIX}"
+
+#
+# clean-up for now
+#
+rm -rf "${IOS_ARM64_X86_64_SIMULATOR_INSTALL_PREFIX}"
+rm -rf "${IOS_ARM64_X86_64_MACCATALYST_INSTALL_PREFIX}"
+rm -rf "${MACOS_ARM64_X86_64_INSTALL_PREFIX}"
