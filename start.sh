@@ -40,9 +40,13 @@ function createLib {
     EXTRA_LIBS=()
     if [ -d "${OPUS_LATEST}" ]; then
         EXTRA_LIBS+=("${OPUS_LATEST}/lib/libopus.a")
+        unset OPUS
+        unset OPUS_LATEST
     fi
     if [[ -d "${SDL_LATEST}" ]]; then
         EXTRA_LIBS+=("${SDL_LATEST}/lib/libSDL2.a")
+        unset SDL
+        unset SDL_LATEST
     fi
     libtool -static -o libpjproject.a ./*.a "${EXTRA_LIBS[@]}"
     ranlib libpjproject.a
