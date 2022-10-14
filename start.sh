@@ -26,10 +26,10 @@ MACOS_ARM64_X86_64_INSTALL_PREFIX="${PREFIX}/macos-arm64_x86_64"
 if [ -d pjproject ]
 then
     pushd pjproject
-    git reset --hard $PJPROJECT_VERSION
+    git reset --hard "${PJPROJECT_VERSION}"
     popd
 else
-    git -c advice.detachedHead=false clone --depth 1 --branch $PJPROJECT_VERSION https://github.com/pjsip/pjproject # > /dev/null 2>&1
+    git -c advice.detachedHead=false clone --depth 1 --branch "${PJPROJECT_VERSION}" https://github.com/pjsip/pjproject # > /dev/null 2>&1
 fi
 
 #
@@ -37,15 +37,14 @@ fi
 #
 function createLib {
     pushd "$1"
-    EXTRA_LIBS=""
-    if [ -d "${OPUS[@]: -1}" ]; then
-        EXTRA_LIBS=""${OPUS[@] -1}"/lib/libopus.a"
+    EXTRA_LIBS=()
+    if [ -d "${OPUS_LATEST}" ]; then
+        EXTRA_LIBS+=("${OPUS_LATEST}/lib/libopus.a")
     fi
-    if [[ -d "${SDL[@]: -1}" ]]; then
-        EXTRA_LIBS+=" "${SDL[@]: -1}"/lib/libSDL2.a"
+    if [[ -d "${SDL_LATEST}" ]]; then
+        EXTRA_LIBS+=("${SDL_LATEST}/lib/libSDL2.a")
     fi
-    echo "Running: libtool -static -o libpjproject.a ./*.a "${EXTRA_LIBS}""
-    libtool -static -o libpjproject.a ./*.a $EXTRA_LIBS
+    libtool -static -o libpjproject.a ./*.a "${EXTRA_LIBS[@]}"
     ranlib libpjproject.a
     popd
 }
@@ -101,22 +100,23 @@ pushd pjproject
 prepare YES
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-arm64)
-if [[ -d "${OPUS[@]: -1}" ]]
+OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
+if [[ -d "${OPUS_LATEST}" ]]
 then
-    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+    CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
 fi
 
 SDKPATH=$(xcrun -sdk iphoneos --show-sdk-path)
 ARCH="arm64"
 CFLAGS="-isysroot $SDKPATH -miphoneos-version-min=13 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH" \
 LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch $ARCH" \
-./aconfigure --prefix="$IOS_ARM64_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+./aconfigure --prefix="${IOS_ARM64_INSTALL_PREFIX}" --host="${ARCH}"-apple-darwin_ios "${CONFIGURE_EXTRA_PARAMS[@]}" --disable-sdl
 
 make dep && make clean
 make
 make install
 
-createLib "$IOS_ARM64_INSTALL_PREFIX"/lib
+createLib "${IOS_ARM64_INSTALL_PREFIX}/lib"
 popd
 
 
@@ -128,22 +128,23 @@ pushd pjproject
 prepare YES
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-arm64-simulator)
-if [[ -d "${OPUS[@]: -1}" ]]
+OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
+if [[ -d "${OPUS_LATEST}" ]]
 then
-    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+    CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
 fi
 
 SDKPATH=$(xcrun -sdk iphonesimulator --show-sdk-path)
 ARCH="arm64"
 CFLAGS="-isysroot $SDKPATH -miphonesimulator-version-min=13 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH" \
 LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch $ARCH" \
-./aconfigure --prefix="$IOS_ARM64_SIMULATOR_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+./aconfigure --prefix="${IOS_ARM64_SIMULATOR_INSTALL_PREFIX}" --host="${ARCH}"-apple-darwin_ios "${CONFIGURE_EXTRA_PARAMS[@]}" --disable-sdl
 
 make dep && make clean
 make
 make install
 
-createLib "$IOS_ARM64_SIMULATOR_INSTALL_PREFIX"/lib
+createLib "${IOS_ARM64_SIMULATOR_INSTALL_PREFIX}/lib"
 popd
 
 
@@ -155,22 +156,23 @@ pushd pjproject
 prepare YES
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-x86_64-simulator)
-if [[ -d "${OPUS[@]: -1}" ]]
+OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
+if [[ -d "${OPUS_LATEST}" ]]
 then
-    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+    CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
 fi
 
 SDKPATH=$(xcrun -sdk iphonesimulator --show-sdk-path)
 ARCH="x86_64"
 CFLAGS="-isysroot $SDKPATH -miphonesimulator-version-min=13 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH" \
 LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch $ARCH" \
-./aconfigure --prefix="$IOS_X86_64_SIMULATOR_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+./aconfigure --prefix="${IOS_X86_64_SIMULATOR_INSTALL_PREFIX}" --host="${ARCH}"-apple-darwin_ios "${CONFIGURE_EXTRA_PARAMS[@]}" --disable-sdl
 
 make dep && make clean
 make
 make install
 
-createLib "$IOS_X86_64_SIMULATOR_INSTALL_PREFIX"/lib
+createLib "${IOS_X86_64_SIMULATOR_INSTALL_PREFIX}/lib"
 popd
 
 
@@ -193,22 +195,23 @@ pushd pjproject
 prepare YES
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-arm64-maccatalyst)
-if [[ -d "${OPUS[@]: -1}" ]]
+OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
+if [[ -d "${OPUS_LATEST}" ]]
 then
-    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+    CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
 fi
 
 SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
 ARCH="arm64"
 CFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -miphoneos-version-min=13.1 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
 LDFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -framework Network -framework Security -framework Foundation -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
-./aconfigure --prefix="$IOS_ARM64_MACCATALYST_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+./aconfigure --prefix="${IOS_ARM64_MACCATALYST_INSTALL_PREFIX}" --host="${ARCH}"-apple-darwin_ios "${CONFIGURE_EXTRA_PARAMS[@]}" --disable-sdl
 
 make dep && make clean
 make VERBOSE=1
 make install
 
-createLib "$IOS_ARM64_MACCATALYST_INSTALL_PREFIX"/lib
+createLib "${IOS_ARM64_MACCATALYST_INSTALL_PREFIX}/lib"
 popd
 
 
@@ -218,22 +221,23 @@ pushd pjproject
 prepare YES
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/ios-x86_64-maccatalyst)
-if [[ -d "${OPUS[@]: -1}" ]]
+OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
+if [[ -d "${OPUS_LATEST}" ]]
 then
-    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+    CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
 fi
 
 SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
 ARCH="x86_64"
 CFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -miphoneos-version-min=13.1 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
 LDFLAGS="-isysroot $SDKPATH -isystem ${SDKPATH}/System/iOSSupport/usr/include -iframework ${SDKPATH}/System/iOSSupport/System/Library/Frameworks -framework Network -framework Security -framework Foundation -arch $ARCH -target ${ARCH}-apple-ios-macabi" \
-./aconfigure --prefix="$IOS_X86_64_MACCATALYST_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin_ios "$CONFIGURE_EXTRA_PARAMS" --disable-sdl
+./aconfigure --prefix="${IOS_X86_64_MACCATALYST_INSTALL_PREFIX}" --host="${ARCH}"-apple-darwin_ios "${CONFIGURE_EXTRA_PARAMS[@]}" --disable-sdl
 
 make dep && make clean
 make VERBOSE=1
 make install
 
-createLib "$IOS_X86_64_MACCATALYST_INSTALL_PREFIX"/lib
+createLib "${IOS_X86_64_MACCATALYST_INSTALL_PREFIX}/lib"
 popd
 
 
@@ -256,26 +260,29 @@ pushd pjproject
 prepare NO YES
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macos-arm64)
-if [[ -d "${OPUS[@]: -1}" ]]; then
-    CONFIGURE_EXTRA_PARAMS="--with-opus="${OPUS[@]: -1}""
+OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
+if [[ -d "${OPUS_LATEST}" ]]
+then
+    CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
 fi
 
 SDL=(/Users/oliver/Developer/SDL/tmp)
-if [[ -d "${SDL[@]: -1}" ]]; then
-    CONFIGURE_EXTRA_PARAMS+=" --with-sdl="${SDL[@]: -1}""
+SDL_LATEST=${SDL[${#SDL[@]} - 1]}
+if [[ -d "${SDL_LATEST}" ]]; then
+    CONFIGURE_EXTRA_PARAMS+=("--with-sdl=${SDL_LATEST}")
 fi
 
 SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
 ARCH="arm"
 CFLAGS="-isysroot $SDKPATH -mmacosx-version-min=11 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\"" \
 LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security" \
-./aconfigure --prefix="${MACOS_ARM64_INSTALL_PREFIX}" --host="${ARCH}"-apple-darwin $CONFIGURE_EXTRA_PARAMS
+./aconfigure --prefix="${MACOS_ARM64_INSTALL_PREFIX}" --host="${ARCH}"-apple-darwin "${CONFIGURE_EXTRA_PARAMS[@]}"
 
 make dep && make clean
 make
 make install
 
-createLib "$MACOS_ARM64_INSTALL_PREFIX"/lib
+createLib "${MACOS_ARM64_INSTALL_PREFIX}/lib"
 unset SDL
 popd
 
@@ -288,22 +295,23 @@ pushd pjproject
 prepare NO
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macos-x86_64)
-if [[ -d "${OPUS[@]: -1}" ]]
+OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
+if [[ -d "${OPUS_LATEST}" ]]
 then
-    CONFIGURE_EXTRA_PARAMS="--with-opus=${OPUS[@]: -1}"
+    CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
 fi
 
 SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
 ARCH="x86_64"
 CFLAGS="-isysroot $SDKPATH -mmacosx-version-min=11 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\" -arch ${ARCH}" \
 LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security -arch ${ARCH}" \
-./aconfigure --prefix="$MACOS_X86_64_INSTALL_PREFIX" --host="${ARCH}"-apple-darwin "$CONFIGURE_EXTRA_PARAMS"
+./aconfigure --prefix="${MACOS_X86_64_INSTALL_PREFIX}" --host="${ARCH}"-apple-darwin "${CONFIGURE_EXTRA_PARAMS[@]}"
 
 make dep && make clean
 arch -arch x86_64 make
 make install
 
-createLib "$MACOS_X86_64_INSTALL_PREFIX"/lib
+createLib "${MACOS_X86_64_INSTALL_PREFIX}/lib"
 popd
 
 
