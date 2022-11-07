@@ -257,6 +257,13 @@ lipo -create \
 
 
 #
+# build SDL for the mac
+#
+THIRD_PARTY="$(pwd)/third_party_bin"
+sh ./sdl.sh ${THIRD_PARTY}
+#
+
+#
 # build for macOS on arm64
 #
 rm -rf "${MACOS_ARM64_INSTALL_PREFIX}"
@@ -270,7 +277,7 @@ then
     CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
 fi
 
-SDL=(/Users/oliver/Developer/SDL/tmp)
+SDL=("${THIRD_PARTY}/macos-arm64")
 SDL_LATEST=${SDL[${#SDL[@]} - 1]}
 if [[ -d "${SDL_LATEST}" ]]; then
     CONFIGURE_EXTRA_PARAMS+=("--with-sdl=${SDL_LATEST}")
@@ -287,7 +294,6 @@ make
 make install
 
 createLib "${MACOS_ARM64_INSTALL_PREFIX}/lib"
-unset SDL
 popd
 
 
@@ -303,6 +309,12 @@ OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
 if [[ -d "${OPUS_LATEST}" ]]
 then
     CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
+fi
+
+SDL=("${THIRD_PARTY}/macos-x86_64")
+SDL_LATEST=${SDL[${#SDL[@]} - 1]}
+if [[ -d "${SDL_LATEST}" ]]; then
+    CONFIGURE_EXTRA_PARAMS+=("--with-sdl=${SDL_LATEST}")
 fi
 
 SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
