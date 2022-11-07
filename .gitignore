@@ -4,3 +4,6 @@ build
 install.sh
 .DS_Store
 .install.sh
+SDL
+ios-cmake
+third_party_bin
