@@ -10,7 +10,7 @@ then
 fi
 
 PREFIX=$1
-SDL_VERSION=release-2.24.1
+SDL_VERSION=main
 IOS_TOOLCHAIN_VERSION=4.3.0
 
 if [ -d SDL ]
