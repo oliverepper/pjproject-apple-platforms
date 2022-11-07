@@ -302,7 +302,7 @@ popd
 #
 rm -rf "${MACOS_X86_64_INSTALL_PREFIX}"
 pushd pjproject
-prepare NO
+prepare NO YES
 
 OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macos-x86_64)
 OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
