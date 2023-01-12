@@ -401,8 +401,28 @@ cp -a "${PREFIX}/macOS-$(arch)/include" "${PREFIX}"
 cp -a "${PREFIX}/macOS-$(arch)/lib" "${PREFIX}"
 
 #
+# create a sane pkg-config
+#
+PCFILE="${PREFIX}/lib/pkgconfig/libpjproject.pc"
+cat << EOF > "${PCFILE}"
+Name: libpjproject
+Description: Multimedia communication library
+URL: http://www.pjsip.org
+EOF
+
+cat << 'EOF' >> "${PCFILE}"
+Version: "${PJPROJECT_VERSION}"
+
+Libs: -L/opt/homebrew/lib -lpjproject -framework Carbon -framework AppKit -framework Security -framework Network -framework AVFoundation -framework CoreMedia -framework CoreAudio -framework CoreVideo -framework AudioToolbox -framework VideoToolbox -framework Metal -framework IOKit
+Cflags: -I/opt/homebrew/include -DPJ_AUTOCONF=1  -DPJ_IS_BIG_ENDIAN=0 -DPJ_IS_LITTLE_ENDIAN=1
+EOF
+
+#
 # clean-up for now
 #
 rm -rf "${IOS_ARM64_X86_64_SIMULATOR_INSTALL_PREFIX}"
 rm -rf "${IOS_ARM64_X86_64_MACCATALYST_INSTALL_PREFIX}"
 rm -rf "${MACOS_ARM64_X86_64_INSTALL_PREFIX}"
+pushd "${PREFIX}"
+find . -not -path "./lib/*" -type d -name pkgconfig | xargs rm -rf
+popd
