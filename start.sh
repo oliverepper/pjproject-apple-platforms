@@ -23,6 +23,8 @@ MACOS_ARM64_INSTALL_PREFIX="${PREFIX}/macos-arm64"
 MACOS_X86_64_INSTALL_PREFIX="${PREFIX}/macos-x86_64"
 MACOS_ARM64_X86_64_INSTALL_PREFIX="${PREFIX}/macos-arm64_x86_64"
 
+MACOS_ARM64_DEBUG_INSTALL_PREFIX="${PREFIX}/macos-arm64-debug"
+
 if [ -d pjproject ]
 then
     pushd pjproject
@@ -341,6 +343,39 @@ lipo -create \
     -output \
     "${MACOS_ARM64_X86_64_INSTALL_PREFIX}/lib/libpjproject.a"
 
+
+#
+# debug build for macOS on arm64
+#
+rm -rf "${MACOS_ARM64_DEBUG_INSTALL_PREFIX}"
+pushd pjproject
+prepare NO YES
+
+OPUS=(/opt/homebrew/Cellar/opus-apple-platforms/*/macos-arm64)
+OPUS_LATEST=${OPUS[${#OPUS[@]} - 1]}
+if [[ -d "${OPUS_LATEST}" ]]
+then
+    CONFIGURE_EXTRA_PARAMS+=("--with-opus=${OPUS_LATEST}")
+fi
+
+SDL=("${THIRD_PARTY}/macos-arm64")
+SDL_LATEST=${SDL[${#SDL[@]} - 1]}
+if [[ -d "${SDL_LATEST}" ]]; then
+    CONFIGURE_EXTRA_PARAMS+=("--with-sdl=${SDL_LATEST}")
+fi
+
+SDKPATH=$(xcrun -sdk macosx --show-sdk-path)
+ARCH="arm"
+CFLAGS="-g -isysroot $SDKPATH -mmacosx-version-min=11 -DPJ_SDK_NAME=\"\\\"$(basename "$SDKPATH")\\\"\"" \
+LDFLAGS="-isysroot $SDKPATH -framework AudioToolbox -framework Foundation -framework Network -framework Security" \
+./aconfigure --prefix="${MACOS_ARM64_DEBUG_INSTALL_PREFIX}" --host="${ARCH}"-apple-darwin "${CONFIGURE_EXTRA_PARAMS[@]}"
+
+make dep && make clean
+make
+make install
+
+createLib "${MACOS_ARM64_DEBUG_INSTALL_PREFIX}/lib"
+popd
 
 #
 # create xcframework
