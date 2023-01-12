@@ -404,14 +404,14 @@ cp -a "${PREFIX}/macOS-$(arch)/lib" "${PREFIX}"
 # create a sane pkg-config
 #
 PCFILE="${PREFIX}/lib/pkgconfig/libpjproject.pc"
-cat << EOF > "${PCFILE}"
+cat << 'EOF' > "${PCFILE}"
 Name: libpjproject
 Description: Multimedia communication library
 URL: http://www.pjsip.org
 EOF
 
-cat << 'EOF' >> "${PCFILE}"
-Version: "${PJPROJECT_VERSION}"
+cat << EOF >> "${PCFILE}"
+Version: ${PJPROJECT_VERSION}
 
 Libs: -L/opt/homebrew/lib -lpjproject -framework Carbon -framework AppKit -framework Security -framework Network -framework AVFoundation -framework CoreMedia -framework CoreAudio -framework CoreVideo -framework AudioToolbox -framework VideoToolbox -framework Metal -framework IOKit
 Cflags: -I/opt/homebrew/include -DPJ_AUTOCONF=1  -DPJ_IS_BIG_ENDIAN=0 -DPJ_IS_LITTLE_ENDIAN=1
