@@ -50,8 +50,17 @@ function createLib {
         unset SDL
         unset SDL_LATEST
     fi
-    libtool -static -o libpjproject.a ./*.a "${EXTRA_LIBS[@]}"
-    ranlib libpjproject.a
+
+    LLVM=(/opt/homebrew/Cellar/llvm/*)
+    LLVM_LATEST=${LLVM[${#LLVM[@]} - 1]}
+    if [[ -d "${LLVM_LATEST}" ]]
+    then
+        ${LLVM_LATEST}/bin/llvm-libtool-darwin -static -o libpjproject.a ./*.a "${EXTRA_LIBS[@]}"
+        touch libpjproject_is_sane
+    else
+        libtool -static -o libpjproject.a ./*.a "${EXTRA_LIBS[@]}"
+        touch libpjproject_is_broken
+    fi
     popd
 }
 
